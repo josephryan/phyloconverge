@@ -1,0 +1,314 @@
+#!perl
+
+#    phyloconverge 
+#
+#    Copyright (C) 2014  Joseph F. Ryan
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+our $VERSION = 0.01;
+
+use strict;
+use warnings;
+use File::Temp;
+use Getopt::Long;
+use Pod::Usage;
+use Math::BigFloat;
+use Data::Dumper;
+
+our $TAB_OUT = 1;
+
+MAIN: {
+    my $rh_opts = process_options();
+
+    my $rh_depths = get_depths($rh_opts->{'tabfile'});
+    my ($ra_taxa,$ra_clades) = get_taxa_and_clades($rh_opts->{'treefile'},$rh_depths);
+    my $ra_max_scores = get_max_scores($rh_depths,$ra_taxa);
+    my $ra_scores = get_score($ra_taxa,$ra_clades,$rh_depths);
+
+    my $stdev = get_stdev($ra_taxa,$rh_depths);
+    print_score($stdev,$ra_max_scores,$ra_scores,$rh_opts->{'treefile'},scalar(@{$ra_taxa}));
+}
+
+sub process_options {
+    my $rh_opts = {};
+    my $opt_results = Getopt::Long::GetOptions(
+                              "version" => \$rh_opts->{'version'},
+                            "tabfile=s" => \$rh_opts->{'tabfile'},
+                           "treefile=s" => \$rh_opts->{'treefile'},
+                                 "help" => \$rh_opts->{'help'});
+    die "$VERSION\n" if ($rh_opts->{'version'});
+    pod2usage({-exitval => 0, -verbose => 2}) if $rh_opts->{'help'};
+    unless ($rh_opts->{'tabfile'} && $rh_opts->{'treefile'}) {
+        warn "missing --tabfile" unless ($rh_opts->{'tabfile'});
+        warn "missing --treefile" unless ($rh_opts->{'treefile'});
+        usage();
+    }
+    return $rh_opts;
+}
+
+sub print_score {
+    my $stdev = shift;
+    my $ra_max = shift;
+    my $ra_scores = shift;
+    my $file = shift;
+    my $taxa_count = shift;
+    my ($score,$count) = _get_best_score_and_count($ra_scores);
+    my $diff = $ra_scores->[0]->{'diff'};
+    my $max = $ra_max->[$count - 1];
+    my $num_stdevs = int(($max - $score) / $stdev);
+    my $bf_stdev = Math::BigFloat->new($stdev);
+    $num_stdevs++ if ($score % $bf_stdev);
+    if ($TAB_OUT) {
+        print "$file\t$score\t$max\t$num_stdevs\t$bf_stdev\t$diff\t$count\t$taxa_count\n";
+    } else {
+        print "bipartition closest to half has a difference of ";
+        print "$diff taxa on each side\n";
+        if ($score == $max) {
+            print "score: $score (MAX SCORE)\n";
+        } else {
+            print "score: $score\n";
+            print "    max score of $count clades = $max\n";
+            print "    $score is w/in $num_stdevs standard devations ($stdev) of $max\n";
+        }
+    }
+}
+
+sub _get_best_score_and_count {
+    my $ra_s = shift;
+    my $diff = $ra_s->[0]->{'diff'};
+    my $score = 0;
+    my $count = 0;
+    my $best_score = 0;
+    foreach my $rh_sc (@{$ra_s}) {
+        last unless ($rh_sc->{'diff'} == $diff);
+        next unless ($rh_sc->{'score'} > $score);
+        $score = $rh_sc->{'score'};
+        if ($rh_sc->{'s_a'} > $rh_sc->{'s_b'}) {
+            $best_score = $rh_sc->{'s_a'};
+            $count = $rh_sc->{'c_a'};
+        } else {
+            $best_score = $rh_sc->{'s_b'};
+            $count = $rh_sc->{'c_b'};
+        }
+    }
+    return ($best_score,$count);
+}
+
+sub _get_best_score {
+    my $ra_s = shift;
+    my $cnt = $ra_s->[0]->{'count'};
+    my $best_score = $ra_s->[0]->{'score'};
+    foreach my $rh_x (@{$ra_s}) {
+        $best_score = $rh_x->{'score'} if ($rh_x->{'score'} > $best_score);
+    }
+    return $best_score;
+}
+
+sub get_stdev {
+    my $ra_taxa = shift;
+    my $rh_depths = shift;
+    my @data = ();
+    foreach my $tax (@{$ra_taxa}) {
+        push @data, $rh_depths->{$tax}
+    }
+    return stdev(\@data);
+}
+
+# from Math::NumberCruncher
+sub stdev {
+    my $ra_data = shift;
+    return 0 if (scalar(@{$ra_data}) == 1);
+    my $average = average($ra_data);
+    my $sqtotal = 0;
+    foreach my $dat (@{$ra_data}) {
+        $sqtotal += ($average - $dat) ** 2;
+    }
+    my $std = ($sqtotal / (@{$ra_data} - 1)) ** 0.5;
+    return $std;
+}
+
+sub average {
+    my($data) = @_;
+    if (not @$data) {
+        die("Empty array\n");
+    }
+    my $total = 0;
+    foreach (@$data) {
+        $total += $_;
+    }
+    my $average = $total / @$data;
+    return $average;
+}
+
+sub get_max_scores {
+    my $rh_depths = shift;
+    my $ra_taxa = shift;
+    my @max_scores = ();
+    my $index = 0;
+    my $m_score = 0;
+    foreach my $tax (sort {$rh_depths->{$b} <=> $rh_depths->{$a}} @{$ra_taxa}) {
+        $m_score += $rh_depths->{$tax};
+        $max_scores[$index] = $m_score;
+        $index++;
+    }
+    return \@max_scores;
+}
+
+sub get_score {
+    my $ra_taxa   = shift;
+    my $ra_clades = shift;
+    my $rh_depths = shift;
+    my @scores = ();
+    my $low_diff = 999999999999999999999999999;
+
+    foreach my $rh_c (@{$ra_clades}) {
+        my $score_a = 0;
+        my $score_b = 0;
+        my $count_a = 0;
+        my $count_b = 0;
+        foreach my $taxon (@{$ra_taxa}) {
+            if ($rh_c->{$taxon}) {
+                $count_a++;
+                $score_a += $rh_depths->{$taxon};
+            } else {
+                $count_b++;
+                $score_b += $rh_depths->{$taxon};
+            } 
+        }
+
+        my $c_diff = $count_a - $count_b;
+        $c_diff *= -1 if ($c_diff < 0);
+
+        my $d_diff = $score_a - $score_b;
+        $d_diff *= -1 if ($d_diff < 0);
+
+        if ($c_diff <= $low_diff) {
+            unshift @scores, { 'score' => $d_diff, 
+                        's_a' => $score_a, 's_b' => $score_b, 
+                        'c_a' => $count_a, 'c_b' => $count_b,
+                        'diff' => $c_diff };
+            $low_diff = $c_diff;
+        }
+    }
+    return \@scores;
+}
+
+sub get_taxa_and_clades {
+    my $file = shift;
+    my $rh_d = shift;
+
+    my @taxa   = ();
+    my @clades = ();
+
+    my $ra_lines = get_lines($file);
+
+    foreach my $node (sort @{$ra_lines}) {
+        $node =~ s/:[e\d\-\.]+//g;
+        if ($node =~ m/^[^\(]+$/) {
+            die "no depth associated with $node" unless ($rh_d->{$node});
+            push @taxa, $node;
+        } else {
+            my @fields = split /[\(\)\,]+/, $node;
+            shift @fields if ($fields[0] eq '');
+            my %clade = ();
+            foreach my $f (@fields) {
+                $clade{$f}++;
+            }
+            push @clades, \%clade;
+        }
+    }
+    return(\@taxa,\@clades);
+}
+
+sub get_lines {
+    my $file = shift;
+    my $tmp_fh = File::Temp->new( SUFFIX => '.py' );
+    print $tmp_fh qq~#!/usr/bin/env python
+
+import sys
+import dendropy
+from dendropy import Tree
+
+file = "$file"
+
+tree = Tree.get_from_path(file, "newick")
+for nd in tree.postorder_internal_node_iter():
+    children = nd.child_nodes()
+    for child in children:
+        print child.as_newick_string()
+~;
+
+my $py_name = $tmp_fh->filename();
+my @clades = `python $py_name`;    
+chomp @clades;
+return \@clades;
+}
+
+sub get_depths {
+    my $file = shift;
+    my %depths = ();
+    open IN, $file or die "cannot open $file:$!";
+    while (my $line = <IN>) {
+        next unless ($line =~ m/\t/);
+        chomp $line;
+        my @fields = split /\t/, $line;
+        $depths{$fields[0]} = $fields[1];
+    }
+    return \%depths;
+}
+
+sub usage {
+    die "usage: $0 --treefile=NEWICKTREEFILE --tabfile=TABFILE_W_ATTRIBUTES\n";
+}
+
+__END__
+
+__END__
+
+=head1 NAME
+
+B<phyloconverge> - A tool for testing for convergence in phylogenetic trees
+
+=head1 AUTHOR
+
+Joseph F. Ryan <joseph.ryan@whitney.ufl.edu>
+
+=head1 SYNOPSIS
+
+phyloconverge --treefile=NEWICKTREEFILE --tabfile=TABFILE_W_ATTRIBUTES [--help] [--version]
+
+=head1 BUGS
+
+Please report them to the author
+
+=head1 COPYRIGHT
+
+Copyright (C) 2014, Joseph F. Ryan
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
