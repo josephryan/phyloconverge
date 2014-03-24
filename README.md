@@ -15,8 +15,8 @@ https://github.com/josephryan/phyloconverge (click the "Download ZIP" button at 
 NOTE: python is called within perl to process the treefile
 
 General system tools:
-- [Perl] (http://www.cpan.org/), which comes with most operating systems
-- [Python] (http://www.python.org/)
+- [Perl] (http://www.cpan.org/), comes with most operating systems
+- [Python] (http://www.python.org/), comes with most operating systems
 
 Additional libraries
 - [DendroPy Phylogenetic Computing Library] (http://pythonhosted.org/DendroPy)
