@@ -18,7 +18,7 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 use strict;
 use warnings;
@@ -71,7 +71,9 @@ sub print_score {
     my $num_stdevs = int(($max - $score) / $stdev);
     my $bf_stdev = Math::BigFloat->new($stdev);
     $num_stdevs++ if ($score % $bf_stdev);
+    $num_stdevs = 0 if ($score == $max);
     if ($TAB_OUT) {
+        print "FILE\tSCORE\tMAX_SCORE_POSSIBLE\tNUM_STDEVS_FROM_MAX\tDIFFERENCE\tNUMBER_OF_TAXA_IN_CLADE\tTOTAL_NUMBER_OF_TAXA\n";
         print "$file\t$score\t$max\t$num_stdevs\t$bf_stdev\t$diff\t$count\t$taxa_count\n";
     } else {
         print "bipartition closest to half has a difference of ";
