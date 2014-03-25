@@ -8,6 +8,11 @@
 
 A python port called `converge_tree.py` is also provided, with the same caveats.
 
+=======
+## ALGORITHM
+
+Essentially, the algorithm splits a tree (supplied in `--treefile`) in half (or as close to as half as possible) and compares the sum of attributes (supplied in `--tabfile`) of the clade with the highest sum of attributes to the maximum sum of attributes possible given the size of the clade and the taxa in the tree.
+
 ## AVAILABILITY
 
 https://github.com/josephryan/phyloconverge (click the "Download ZIP" button at the bottom of the right column).
@@ -23,6 +28,7 @@ General system tools:
 Additional libraries
 - [DendroPy Phylogenetic Computing Library] (http://pythonhosted.org/DendroPy)
 
+
 ## INSTALLATION
 
 To install `phyloconverge` and documentation, type the following:
@@ -31,6 +37,10 @@ To install `phyloconverge` and documentation, type the following:
     make
     make test
     sudo make install
+
+To install `dendropy`, depending on your system, you can probably use this command:
+
+	sudo pip install dendropy
 
 ## RUN
 
