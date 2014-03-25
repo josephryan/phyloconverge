@@ -73,7 +73,7 @@ sub print_score {
     $num_stdevs++ if ($score % $bf_stdev);
     $num_stdevs = 0 if ($score == $max);
     if ($TAB_OUT) {
-        print "FILE\tSCORE\tMAX_SCORE_POSSIBLE\tNUM_STDEVS_FROM_MAX\tDIFFERENCE\tNUMBER_OF_TAXA_IN_CLADE\tTOTAL_NUMBER_OF_TAXA\n";
+        print "TREEFILE\tSCORE\tMAX_SCORE_POSSIBLE\tNUM_STDEVS_FROM_MAX\tSTDEV\tDIFFERENCE_IN_NUMBER_OF_TAXA_IN_TWO_CLADES\tNUMBER_OF_TAXA_IN_CLADE\tTOTAL_NUMBER_OF_TAXA\n";
         print "$file\t$score\t$max\t$num_stdevs\t$bf_stdev\t$diff\t$count\t$taxa_count\n";
     } else {
         print "bipartition closest to half has a difference of ";
