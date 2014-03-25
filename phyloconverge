@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/env perl
 
 #    phyloconverge 
 #
@@ -240,8 +240,6 @@ sub get_lines {
     my $tmp_fh = File::Temp->new( SUFFIX => '.py' );
     print $tmp_fh qq~#!/usr/bin/env python
 
-import sys
-import dendropy
 from dendropy import Tree
 
 file = "$file"
