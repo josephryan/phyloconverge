@@ -6,6 +6,10 @@
 
 `phyloconverge` is an algorithm to look for convergence based on a particular trait in a phylogenetic tree. The traits can be quantitative (e.g., size in centimeters or depth of observation) or can be categorical (e.g., associated with hydrothermal vents or not associated with hydrothermal vents).
 
+## ALGORITHM
+
+Essentially, the algorithm splits a tree (supplied in --treefile) in half (or as close to as half as possible) and compares the sum of attributes (supplied in --tabfile) of the clade with the highest sum of attributes to the maximum sum of attributes possible given the size of the clade and the taxa in the tree.
+
 ## AVAILABILITY
 
 https://github.com/josephryan/phyloconverge (click the "Download ZIP" button at the bottom of the right column).
