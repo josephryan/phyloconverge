@@ -1,5 +1,6 @@
 LICENSE
 MANIFEST
+Makefile.PL
 README.md
 examples/converged.tre
 examples/depths.txt
