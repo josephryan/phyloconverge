@@ -65,6 +65,8 @@ sub print_score {
     my $ra_scores = shift;
     my $file = shift;
     my $taxa_count = shift;
+    # print Dumper(\$ra_scores);
+
     my ($score,$count) = _get_best_score_and_count($ra_scores);
     my $diff = $ra_scores->[0]->{'diff'};
     my $max = $ra_max->[$count - 1];
@@ -94,6 +96,7 @@ sub _get_best_score_and_count {
     my $score = 0;
     my $count = 0;
     my $best_score = 0;
+    
     foreach my $rh_sc (@{$ra_s}) {
         last unless ($rh_sc->{'diff'} == $diff);
         next unless ($rh_sc->{'score'} > $score);
@@ -110,6 +113,7 @@ sub _get_best_score_and_count {
 }
 
 sub _get_best_score {
+	# This function is not used..?
     my $ra_s = shift;
     my $cnt = $ra_s->[0]->{'count'};
     my $best_score = $ra_s->[0]->{'score'};
@@ -166,6 +170,7 @@ sub get_max_scores {
         $max_scores[$index] = $m_score;
         $index++;
     }
+#     print join(", ", @max_scores)."\n";
     return \@max_scores;
 }
 
@@ -246,8 +251,7 @@ file = "$file"
 
 tree = Tree.get_from_path(file, "newick")
 for nd in tree.postorder_internal_node_iter():
-    children = nd.child_nodes()
-    for child in children:
+    for child in nd.child_nodes():
         print child.as_newick_string()
 ~;
 

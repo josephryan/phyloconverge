@@ -6,6 +6,8 @@
 
 `phyloconverge` is an algorithm to look for convergence based on a particular trait in a phylogenetic tree. The traits can be quantitative (e.g., size in centimeters or depth of observation) or can be categorical (e.g., associated with hydrothermal vents or not associated with hydrothermal vents).
 
+A python port called `converge_tree.py` is also provided, with the same caveats.
+
 ## AVAILABILITY
 
 https://github.com/josephryan/phyloconverge (click the "Download ZIP" button at the bottom of the right column).
@@ -41,10 +43,12 @@ To install `phyloconverge` and documentation, type the following:
 
     phyloconverge --treefile=examples/notconverged.tre \
                   --tabfile=examples/depths.txt
+                  
+    converge_tree.py -t examples/notconverged.tre -d examples/depths.txt
 
 ## DOCUMENTATION
 
-Extensive documentation is embedded inside of `phyloconverge` in POD format and
+VERY Extensive documentation is embedded inside of `phyloconverge` in POD format and
 can be viewed by running any of the following:
 
         phyloconverge --help
