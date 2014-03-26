@@ -58,6 +58,10 @@ To install `dendropy`, depending on your system, you can probably use this comma
                   
     converge_tree.py -t examples/notconverged.tre -d examples/depths.txt
 
+To generate a table of results from many trees with one data file:
+
+    for T in Treefiles_*; do converge_tree.py -d datatable.txt -t "$T" >> AllResults.txt; done; 
+
 ## DOCUMENTATION
 
 VERY Extensive documentation is embedded inside of `phyloconverge` in POD format and
