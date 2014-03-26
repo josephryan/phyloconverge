@@ -30,8 +30,9 @@ def main():
 		ra_max_scores,depthlist = max_scores(rh_depths,ra_taxa)
 	
 		scorelist,ra_scores = get_score(ra_taxa,ra_clades,rh_depths)
-		# for j in ra_scores:
-		# 	print j
+		if Options.Debug:
+			for j in ra_scores:
+				print j
 			
 		diff, best_score, best_count = get_best_score_and_count(scorelist,ra_scores)
 		max_possible = ra_max_scores[best_count]
@@ -63,6 +64,7 @@ def get_options():
 	parser.add_option("-d", "--datafile", action="store", type="string", dest="DataFileName", help="Path to data file")
 	parser.add_option("-p", "--printheader", action="store_true", dest="PrintHead", default=False, help="Print header line before output")
 	parser.add_option("-t", "--treefile", action="store", type="string", dest="TreeFileName", help="Path to tree file")
+	parser.add_option("-b", "--debug", action="store_true", dest="Debug", help="Turn on Debugging output")
 	(options, args) = parser.parse_args()
 	return options, args
 
@@ -157,19 +159,21 @@ def get_best_score_and_count(scorelist,ra_scores):
 				AorB = ['b','a'][(sc['s_a'] > sc['s_b'])]
 				best_sc = sc['s_'+ AorB] 
 				best_ct = sc['c_'+ AorB] 
+				score = sc['score']
 		else:
 			break
 	return sortsc[0]['diff'],best_sc, best_ct
 
 
-def get_best(scorelist,ra_scores):
-	position = scorelist.index(max(scorelist))
-	# use logical 0 or 1 to index the value
-	AorB = ['b','a'][(ra_scores[position]['s_a'] > ra_scores[position]['s_b'])]
-	
-	best_sc    = ra_scores[position]['s_'+ AorB] 
-	best_ct = ra_scores[position]['c_'+ AorB] 
-	return ra_scores[position]['diff'],best_sc, best_ct
+# def get_best(scorelist,ra_scores):
+# # Based on highest score, not diff
+# 	position = scorelist.index(max(scorelist))
+# 	# use logical 0 or 1 to index the value
+# 	AorB = ['b','a'][(ra_scores[position]['s_a'] > ra_scores[position]['s_b'])]
+# 	
+# 	best_sc    = ra_scores[position]['s_'+ AorB] 
+# 	best_ct = ra_scores[position]['c_'+ AorB] 
+# 	return ra_scores[position]['diff'],best_sc, best_ct
 	
 
 if __name__ == "__main__":
