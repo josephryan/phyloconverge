@@ -43,7 +43,8 @@ def main():
 			num_stdevs = 0
 	
 		Header = "TREEFILE\tSCORE\tMAX_POSSIBLE\tNUM_STDEVS\tSTDEV\tCOUNT_DIFF_IN_TWO_CLADES\tTAXA_IN_CLADE\tTOTAL_TAXA"
-		print Header
+		if Options.PrintHead:
+			print Header
 		print "{0}\t{1:.1f}\t{2:.1f}\t{3:.1f}\t{4:.2f}\t{5}\t{6}\t{7}".format(Options.TreeFileName,
 		        best_score,max_possible,num_stdevs,standev,diff,best_count,len(ra_taxa))
 
@@ -116,7 +117,6 @@ def get_tree_lines(Tname):
 def max_scores(dep,taxa):
 	mscore = {}
 	dv = [dep[d] for d in dep.keys() if d in taxa]
-	print len(dv)
 	sdepth = sorted(dv)[::-1]
 	for i in range(1,len(sdepth)+1):
 		mscore[i] = sum(sdepth[:i])
