@@ -65,8 +65,7 @@ sub print_score {
     my $ra_scores = shift;
     my $file = shift;
     my $taxa_count = shift;
-    # print Dumper(\$ra_scores);
-
+#     print Dumper(\$ra_scores);
     my ($score,$count) = _get_best_score_and_count($ra_scores);
     my $diff = $ra_scores->[0]->{'diff'};
     my $max = $ra_max->[$count - 1];

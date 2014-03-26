@@ -22,18 +22,20 @@ def main():
 	if not(Options.DataFileName and Options.TreeFileName):
 		sys.stderr.write("You must specify a data file [-d] (taxon<tab>trait) and Newick tree file [-t].\n")
 	else:
-		rh_depths = get_depths(Options.DataFileName)
 
 		# print rh_depths
 	
+		rh_depths = get_depths(Options.DataFileName)
 		ra_taxa, ra_clades = get_taxa_and_clades(Options.TreeFileName,rh_depths)
-	
-		ra_max_scores = max_scores(rh_depths)
+		ra_max_scores,depthlist = max_scores(rh_depths,ra_taxa)
 	
 		scorelist,ra_scores = get_score(ra_taxa,ra_clades,rh_depths)
-		diff, best_score, best_count = get_best(scorelist,ra_scores)
+		# for j in ra_scores:
+		# 	print j
+			
+		diff, best_score, best_count = get_best_score_and_count(scorelist,ra_scores)
 		max_possible = ra_max_scores[best_count]
-		standev = stdev(rh_depths.values())
+		standev = stdev(depthlist)
 	
 		if standev:
 			num_stdevs = round((max_possible - best_score) / standev,1);
@@ -54,6 +56,16 @@ def stdev(a):
 	s2 = sum( (x - mean(a))**2  for x in a )/ (len(a)-1)
 	return s2**0.5
 	
+def get_options():
+	parser = OptionParser(usage = __doc__)
+#	parser.add_option("-v", "--version", action="store_true", dest="version", default=False, help="Print program version")
+	parser.add_option("-d", "--datafile", action="store", type="string", dest="DataFileName", help="Path to data file")
+	parser.add_option("-p", "--printheader", action="store_true", dest="PrintHead", default=False, help="Print header line before output")
+	parser.add_option("-t", "--treefile", action="store", type="string", dest="TreeFileName", help="Path to tree file")
+	(options, args) = parser.parse_args()
+	return options, args
+
+
 def get_depths(Fname):
 	"""Read in dictionary of depths"""
 	DD = {}
@@ -61,7 +73,8 @@ def get_depths(Fname):
 		for Line in Dfile:
 			if Line:
 				T,V = Line.rstrip("\n").split()
-				DD[T] = float(V)
+				if V.replace('.','').isdigit():
+					DD[T] = float(V)
 	return DD
 	
 def get_taxa_and_clades(Tname,dep):
@@ -100,21 +113,14 @@ def get_tree_lines(Tname):
 	return (stringlist)
 	
 	
-def get_options():
-	parser = OptionParser(usage = __doc__)
-#	parser.add_option("-v", "--version", action="store_true", dest="version", default=False, help="Print program version")
-	parser.add_option("-d", "--datafile", action="store", type="string", dest="DataFileName", help="Path to data file")
-	parser.add_option("-t", "--treefile", action="store", type="string", dest="TreeFileName", help="Path to tree file")
-	(options, args) = parser.parse_args()
-	return options, args
-
-
-def max_scores(dep):
+def max_scores(dep,taxa):
 	mscore = {}
-	sdepth = sorted(dep.values())[::-1]
+	dv = [dep[d] for d in dep.keys() if d in taxa]
+	print len(dv)
+	sdepth = sorted(dv)[::-1]
 	for i in range(1,len(sdepth)+1):
 		mscore[i] = sum(sdepth[:i])
-	return mscore
+	return mscore, dv
 	
 
 def get_score(tax,clades,dep):
@@ -135,13 +141,30 @@ def get_score(tax,clades,dep):
 			low_diff = c_diff
 			fullscore.append(dict(zip(labels,
 			          (d_diff, sum_a, sum_b, count_a, count_b, c_diff))))
-			scores.append(d_diff)
+			scores.append(c_diff)
 	return scores,fullscore
+
+def get_best_score_and_count(scorelist,ra_scores):
+	# print scorelist
+	sortsc = [x for (y,x) in sorted(zip(scorelist,ra_scores))]
+	# print sortsc
+	diff = sortsc[0]['diff']
+	score = 0
+	for sc in sortsc:
+		if sc['diff'] == diff:
+			if sc['score'] > score:
+				# use logical 0 or 1 to index the value
+				AorB = ['b','a'][(sc['s_a'] > sc['s_b'])]
+				best_sc = sc['s_'+ AorB] 
+				best_ct = sc['c_'+ AorB] 
+		else:
+			break
+	return sortsc[0]['diff'],best_sc, best_ct
 
 
 def get_best(scorelist,ra_scores):
 	position = scorelist.index(max(scorelist))
-	
+	# use logical 0 or 1 to index the value
 	AorB = ['b','a'][(ra_scores[position]['s_a'] > ra_scores[position]['s_b'])]
 	
 	best_sc    = ra_scores[position]['s_'+ AorB] 
