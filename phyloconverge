@@ -39,7 +39,7 @@ MAIN: {
     my $ra_scores = get_score($ra_taxa,$ra_clades,$rh_depths);
 
     my $stdev = get_stdev($ra_taxa,$rh_depths);
-    print_score($stdev,$ra_max_scores,$ra_scores,$rh_opts->{'treefile'},scalar(@{$ra_taxa}));
+    print_score($stdev,$ra_max_scores,$ra_scores,$rh_opts->{'treefile'},scalar(@{$ra_taxa}),$rh_opts->{'header'});
 }
 
 sub process_options {
@@ -48,9 +48,11 @@ sub process_options {
                               "version" => \$rh_opts->{'version'},
                             "tabfile=s" => \$rh_opts->{'tabfile'},
                            "treefile=s" => \$rh_opts->{'treefile'},
-                                 "help" => \$rh_opts->{'help'});
+                                 "help" => \$rh_opts->{'help'},
+                              "header" => \$rh_opts->{'header'});
     die "$VERSION\n" if ($rh_opts->{'version'});
     pod2usage({-exitval => 0, -verbose => 2}) if $rh_opts->{'help'};
+    
     unless ($rh_opts->{'tabfile'} && $rh_opts->{'treefile'}) {
         warn "missing --tabfile" unless ($rh_opts->{'tabfile'});
         warn "missing --treefile" unless ($rh_opts->{'treefile'});
@@ -65,6 +67,7 @@ sub print_score {
     my $ra_scores = shift;
     my $file = shift;
     my $taxa_count = shift;
+    my $header_option = shift;
 #     print Dumper(\$ra_scores);
     my ($score,$count) = _get_best_score_and_count($ra_scores);
     my $diff = $ra_scores->[0]->{'diff'};
@@ -74,7 +77,9 @@ sub print_score {
     $num_stdevs++ if ($score % $bf_stdev);
     $num_stdevs = 0 if ($score == $max);
     if ($TAB_OUT) {
-        print "TREEFILE\tSCORE\tMAX_SCORE_POSSIBLE\tNUM_STDEVS_FROM_MAX\tSTDEV\tDIFFERENCE_IN_NUMBER_OF_TAXA_IN_TWO_CLADES\tNUMBER_OF_TAXA_IN_CLADE\tTOTAL_NUMBER_OF_TAXA\n";
+        if ($header_option){
+        	print "TREEFILE\tSCORE\tMAX_SCORE_POSSIBLE\tNUM_STDEVS_FROM_MAX\tSTDEV\tDIFFERENCE_IN_NUMBER_OF_TAXA_IN_TWO_CLADES\tNUMBER_OF_TAXA_IN_CLADE\tTOTAL_NUMBER_OF_TAXA\n";
+        	}
         print "$file\t$score\t$max\t$num_stdevs\t$bf_stdev\t$diff\t$count\t$taxa_count\n";
     } else {
         print "bipartition closest to half has a difference of ";
