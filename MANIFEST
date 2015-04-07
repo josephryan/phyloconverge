@@ -5,5 +5,5 @@ README.md
 examples/converged.tre
 examples/depths.txt
 examples/notconverged.tre
-phyloconverge
 t/phyloconverge.t
+phyloconverge

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """ Test for convergent signals in bipartitions of trees.
 
+Python port is not maintained but provided for learning purposes
+
 Requires: 
    A data file with taxon<tab>value
    A tree file with matching taxon names.
