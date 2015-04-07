@@ -26,7 +26,7 @@ use File::Temp;
 use Getopt::Long;
 use Pod::Usage;
 use Math::BigFloat;
-use Data::Dumper;
+#use Data::Dumper;
 
 our $TAB_OUT = 1;
 
@@ -284,8 +284,6 @@ sub usage {
 
 __END__
 
-__END__
-
 =head1 NAME
 
 B<phyloconverge> - A tool for testing for convergence in phylogenetic trees
@@ -297,6 +295,20 @@ Joseph F. Ryan <joseph.ryan@whitney.ufl.edu>
 =head1 SYNOPSIS
 
 phyloconverge --treefile=NEWICKTREEFILE --tabfile=TABFILE_W_ATTRIBUTES [--help] [--version]
+
+=head1 OPTIONS
+
+=item B<--treefile>
+
+treefile in Newick format
+
+=item B<--tabfile>
+
+A tab delimited file of traits. Column 1 is a label, column 2 is either: quantitative trait (e.g., size in centimeters) or categorical (e.g., herbivore, carnivore). For an example see: examples/depths.txt.
+
+=item B<--help>
+
+Print this manual
 
 =head1 BUGS
 
