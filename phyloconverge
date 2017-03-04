@@ -18,7 +18,7 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-our $VERSION = 0.02;
+our $VERSION = 0.03;
 
 use strict;
 use warnings;
