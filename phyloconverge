@@ -256,7 +256,10 @@ file = "$file"
 tree = Tree.get_from_path(file, "newick")
 for nd in tree.postorder_internal_node_iter():
     for child in nd.child_nodes():
-        print child.as_newick_string()
+        try:
+            print child.as_newick_string()
+        except AttributeError:
+            print child._as_newick_string()
 ~;
 
 my $py_name = $tmp_fh->filename();
